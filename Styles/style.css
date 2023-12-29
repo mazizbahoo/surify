@@ -1,0 +1,80 @@
+@font-face {
+    font-family: 'SPB';
+    src: url('../Fonts/Spbold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'SPN';
+    src: url('../Fonts/spnormal.woff2') format('woff2');
+}
+
+/* ─── Variables ───────────────────────── */
+:root {
+    --black: #000;
+    --darkgrey: #121212;
+    --card: #181818;
+    --cardhover: #282828;
+    --lightgrey: #b3b3b3;
+    --white: #fff;
+    --accent: #e31b3a;
+    --accent-rgb: 227,27,58;
+    --accent-hover: #f5304e;
+    --accent-text: #ff4d63;      /* lighter shade for text on dark backgrounds */
+    --sidebar-width: 240px;
+    --player-height: 90px;
+    --t: 180ms ease;
+    --t-fast: 100ms ease;
+    --rs-pad: 18px;
+}
+
+/* ─── Reset ───────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    background: var(--black);
+    font-family: 'SPN', sans-serif;
+    color: var(--white);
+    user-select: none;
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+button { background: none; border: none; color: inherit; cursor: pointer; font-family: inherit; }
+svg { flex-shrink: 0; }
+button:active:not(:disabled) { transform: scale(0.94); }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.card-Container, .library-songs, .left-section, .song-results {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.22) transparent;
+}
+.card-Container::-webkit-scrollbar, .library-songs::-webkit-scrollbar, .left-section::-webkit-scrollbar, .song-results::-webkit-scrollbar { width: 10px; }
+.card-Container::-webkit-scrollbar-track, .library-songs::-webkit-scrollbar-track, .left-section::-webkit-scrollbar-track, .song-results::-webkit-scrollbar-track { background: transparent; }
+.card-Container::-webkit-scrollbar-thumb, .library-songs::-webkit-scrollbar-thumb, .left-section::-webkit-scrollbar-thumb, .song-results::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.22);
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    transition: background var(--t);
+}
+.card-Container::-webkit-scrollbar-thumb:hover, .library-songs::-webkit-scrollbar-thumb:hover, .left-section::-webkit-scrollbar-thumb:hover, .song-results::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.4);
+    background-clip: padding-box;
+}
+
+/* ─── Layout ──────────────────────────── */
+.main-sections {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    padding: 8px 8px 0 8px;
+    overflow: hidden;
+    min-height: 0;
+}
