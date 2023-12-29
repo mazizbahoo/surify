@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surify - Music for free</title>
+    <link rel="icon" href="../Icons/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="../Icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="../Styles/style.css">
+</head>
+<body draggable="false">
+
+    <div class="mobile-overlay" id="mobile-overlay"></div>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+    </button>
+
+    <div class="main-sections">
+        <aside class="left-section" id="left-section">
+            <button class="sidebar-close" id="sidebar-close" aria-label="Close menu">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+
+            <section class="home-search">
+                <div class="logo">
+                    <img class="logo-img" src="../Icons/surify_logo_transparent.png" alt="Surify">
+                    <span class="logo-text">Surify</span>
+                </div>
+                <div class="h-s" id="home-btn">
+                    <svg class="twfo" viewBox="0 0 24 24" fill="currentColor"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z"/></svg>
+                    <h4>Home</h4>
+                </div>
+                <div class="h-s" id="open-search-sidebar">
+                    <svg class="twfo" viewBox="0 0 24 24" fill="currentColor"><path d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5zM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5z"/></svg>
+                    <h4>Search</h4>
+                </div>
+            </section>
+
+            <section class="your-library">
+                <div class="your-library-head">
+                    <div class="y-l">
+                        <svg class="twfo" viewBox="0 0 24 24" fill="currentColor"><path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V6.464a1 1 0 0 0-.5-.866l-6-3.464zM9 2a1 1 0 0 0-1 1v18a1 1 0 0 0 2 0V3a1 1 0 0 0-1-1z"/></svg>
+                        <h4>Playlist Songs</h4>
+                    </div>
+                </div>
+
+                <div class="library-filters">
+                    <button class="libfilters active-lib" data-lib="all">Playlists</button>
+                    <button class="libfilters" data-lib="favorites">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:3px;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        Favorites
+                    </button>
+                </div>
+
+                <div class="library-songs" id="library-songs"></div>
+            </section>
+        </aside>
+
+        <article class="right-section">
+            <header class="head">
+                <img class="head-logo" src="../Icons/surify_logo_transparent.png" alt="Surify">
+                <div class="backforward">
+                    <button class="go nav-btn" id="nav-back" title="Previously played song" disabled>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                    </button>
+                    <button class="go nav-btn" id="nav-forward" title="Next in play history" disabled>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                    </button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="header-search-wrap">
+                    <svg class="header-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5zM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5z"/></svg>
+                    <input type="text" id="header-search" class="header-search-input" placeholder="Search songs, artists, playlists…" autocomplete="off">
+                    <button class="search-clear" id="search-clear" title="Clear">✕</button>
+                </div>
+
+                <div class="userarea">
+                    <div class="accent-wrap">
+                        <button class="go beus" id="accent-btn" title="Accent color" aria-haspopup="true">
+                            <span class="accent-dot"></span>
+                        </button>
+                        <div class="accent-menu" id="accent-menu" role="menu"></div>
+                    </div>
+                    <button class="go beus" id="fullscreen-btn" title="Fullscreen">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                    </button>
+                </div>
+            </header>
+
+            <section class="main-section">
+                <div class="main-section-top">
+                    <div class="main-heading">Surify Playlists</div>
+                    <div class="sort-wrap">
+                        <span class="sort-label">Sort by:</span>
+                        <div class="sort-dropdown-wrap">
+                            <button class="sort-btn" id="sort-btn">
+                                <span id="sort-label-text">Default</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+                            </button>
+                            <div class="sort-dropdown" id="sort-dropdown">
+                                <button class="sort-option active" data-sort="default">Default</button>
+                                <button class="sort-option" data-sort="az">A → Z</button>
+                                <button class="sort-option" data-sort="za">Z → A</button>
+                                <button class="sort-option" data-sort="artist">By Artist</button>
+                                <button class="sort-option" data-sort="favorites">Favorites First</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="category-filter-bar" id="category-filter-bar">
+                    <button class="cat-filter active" data-category="all">All</button>
+                </div>
+
+                <div class="song-results" id="song-results" hidden>
+                    <div id="song-results-list"></div>
+                </div>
+
+                <div class="no-results" id="no-results" style="display:none;">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="rgba(255,255,255,0.15)"><path d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5zM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5z"/></svg>
+                    <p>No results found</p>
+                    <span>Try a different search or category</span>
+                </div>
+
+                <div class="card-Container" id="card-Container"></div>
+            </section>
+        </article>
+    </div>
+
+    <!-- Player -->
+    <div class="player idle" id="player">
+        <div class="player-song-info">
+            <div class="player-img-wrap">
+                <img class="player-image" src="" id="player-img" alt="Now Playing">
+                <div class="player-img-placeholder">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.3)"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                </div>
+            </div>
+            <div class="player-title">
+                <div class="ptt" id="ptt">Select a playlist</div>
+                <div class="pta" id="pta">—</div>
+            </div>
+            <button class="like-btn" id="player-fav-btn" title="Add to favorites" aria-pressed="false">
+                <svg id="like-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+        </div>
+
+        <div class="player-song-control">
+            <div class="song-controls">
+                <button class="scon-btn toggle" id="shuffle-btn" title="Shuffle" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+                </button>
+                <button class="scon-btn" id="back-Button" title="Previous">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+                </button>
+                <button class="scon-btn scbgfill" id="playbutton" title="Play/Pause">
+                    <!-- Play icon by default -->
+                    <svg id="play-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <button class="scon-btn" id="next-Button" title="Next">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+                </button>
+                <button class="scon-btn toggle" id="repeat-btn" title="Repeat: off" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path id="repeat-path" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+                </button>
+            </div>
+            <div class="seekbar">
+                <span class="time-played" id="time-played">0:00</span>
+                <div class="seekbar-track-wrapper">
+                    <div class="back-seek" id="back-seek">
+                        <div class="runned-seek" id="runned-seek">
+                            <div class="dot-seek"></div>
+                        </div>
+                    </div>
+                </div>
+                <span class="time-remaining" id="total-time">0:00</span>
+            </div>
+        </div>
+
+        <div class="player-song-settings">
+            <button class="pss-btn" id="vol-btn" title="Volume">
+                <svg id="vol-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+            <div class="volume-bar-wrapper">
+                <div class="back-seek bsvolume" id="total-volume">
+                    <div class="runned-seek rsvolume" id="set-volume">
+                        <div class="dot-seek"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../Scripts/script.js"></script>
+</body>
+</html>
