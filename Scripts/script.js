@@ -306,3 +306,60 @@ function sortCards(cards, method) {
         }
     });
 }
+
+/* ═══════════════════════════════════════════
+   LIBRARY SONGS
+═══════════════════════════════════════════ */
+function renderLibrarySongs(songList = viewContent.songs) {
+    const container = document.getElementById("library-songs");
+    container.innerHTML = "";
+    const favs = getFavorites();
+
+    let filtered = songList;
+    if (currentLibFilter === "favorites") {
+        filtered = songList.filter(url => favs[songKey(url)]);
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div style="padding:16px 8px;color:var(--lightgrey);font-size:13px;">
+            ${!viewFolder ? "Select a playlist to see its songs."
+                : currentLibFilter === "favorites" ? "No favorites yet. ❤ a song to add it." : "No songs in this playlist."}
+        </div>`;
+        return;
+    }
+
+    filtered.forEach((songUrl, i) => {
+        const { songName, artist } = parseSongPath(songUrl);
+        const key = songKey(songUrl);
+        const fav = !!favs[key];
+
+        const card = document.createElement("div");
+        card.className = "library-song-card" + (fav ? " favorited" : "");
+        card.dataset.songUrl = songUrl;
+        card.innerHTML = `
+            <div class="lib-song-dot"></div>
+            <div class="lib-song-text">
+                <div class="library-song-name">${songName}</div>
+                <div class="library-artist-name">${artist}</div>
+            </div>
+            <svg class="lib-fav-dot" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="color:var(--accent);">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>`;
+
+        // Find original index in full songs array
+        const origIdx = songList.indexOf(songUrl);
+        card.addEventListener("click", () => playFromView(origIdx));
+        container.appendChild(card);
+    });
+
+    highlightCurrentLibrarySong();
+}
+
+function highlightCurrentLibrarySong() {
+    document.querySelectorAll(".library-song-card").forEach(card => {
+        const url = card.dataset.songUrl;
+        card.classList.toggle("playing", viewFolder === currentFolder && url === songs[currentIndex]);
+    });
+    const active = document.querySelector(".library-song-card.playing");
+    if (active) active.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
