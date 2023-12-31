@@ -138,3 +138,171 @@ function getFolderContent(folderUrl) {
     return folderCache.get(folderUrl);
 }
 async function getSongs(folderUrl) { return (await getFolderContent(folderUrl)).songs; }
+
+/* ═══════════════════════════════════════════
+   CATEGORY FILTERS
+═══════════════════════════════════════════ */
+const categorySet = new Set(["all"]);
+
+function selectCategory(key, btn) {
+    activeCategory = key;
+    document.querySelectorAll(".cat-filter").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    applyFiltersAndSort();
+}
+
+// The static "All" button
+document.querySelector('.cat-filter[data-category="all"]')
+    .addEventListener("click", e => selectCategory("all", e.currentTarget));
+
+function addCategoryFilter(category) {
+    const key = category.toLowerCase();
+    if (categorySet.has(key)) return;
+    categorySet.add(key);
+
+    const btn = document.createElement("button");
+    btn.className = "cat-filter";
+    btn.dataset.category = key;
+    btn.textContent = category;
+    btn.addEventListener("click", () => selectCategory(key, btn));
+    document.getElementById("category-filter-bar").appendChild(btn);
+}
+
+/* ═══════════════════════════════════════════
+   FILTER + SORT + SEARCH (cards)
+═══════════════════════════════════════════ */
+function applyFiltersAndSort() {
+    const container = document.getElementById("card-Container");
+    const q = searchQuery.toLowerCase().trim();
+
+    // Get all card data from the DOM
+    let cards = Array.from(container.querySelectorAll(".card"));
+
+    // Hide/show based on category + search
+    let visibleCards = cards.filter(card => {
+        const cardCat = (card.dataset.category || "").toLowerCase();
+        const cardName = (card.dataset.name || "").toLowerCase();
+        const cardArtist = (card.dataset.artist || "").toLowerCase();
+
+        const matchesCat = activeCategory === "all" || cardCat === activeCategory;
+        const matchesSearch = !q || cardName.includes(q) || cardArtist.includes(q) || cardCat.includes(q);
+
+        return matchesCat && matchesSearch;
+    });
+
+    // Sort
+    const sorted = sortCards(visibleCards, currentSort);
+
+    // Re-append sorted visible cards, hide others
+    const hiddenCards = cards.filter(c => !visibleCards.includes(c));
+    hiddenCards.forEach(c => c.classList.add("hidden"));
+    visibleCards.forEach(c => c.classList.remove("hidden"));
+
+    // Reorder in DOM
+    sorted.forEach(card => container.appendChild(card));
+
+    // Songs matching the search (also respects the active category)
+    const songMatches = q
+        ? songIndex.filter(sg =>
+            (activeCategory === "all" || sg.category.toLowerCase() === activeCategory) &&
+            (sg.name.toLowerCase().includes(q) || sg.artist.toLowerCase().includes(q) || sg.album.toLowerCase().includes(q)))
+        : [];
+    renderSearchResults(q ? sorted : [], songMatches);
+
+    // No results
+    document.getElementById("no-results").style.display = sorted.length === 0 && songMatches.length === 0 ? "flex" : "none";
+    container.style.display = q || sorted.length === 0 ? "none" : "grid";
+}
+
+// Unified search results: matching playlists first, then matching songs, each tagged
+function renderSearchResults(playlistCards, songMatches) {
+    const box = document.getElementById("song-results");
+    const list = document.getElementById("song-results-list");
+    list.innerHTML = "";
+    box.hidden = playlistCards.length + songMatches.length === 0;
+
+    const addRow = ({ cover, name, tag, isSong, sub, active, onClick }) => {
+        const row = document.createElement("div");
+        row.className = "song-row" + (active ? (isSong ? " playing" : " viewing") : "");
+        const thumb = document.createElement("div");
+        thumb.className = "song-row-thumb";
+        if (cover) thumb.style.backgroundImage = `url("${cover}")`;
+        const text = document.createElement("div");
+        text.className = "song-row-text";
+        const nm = document.createElement("div");
+        nm.className = "song-row-name";
+        nm.textContent = name;
+        const subLine = document.createElement("div");
+        subLine.className = "song-row-sub";
+        const tagEl = document.createElement("span");
+        tagEl.className = "result-tag" + (isSong ? " is-song" : "");
+        tagEl.textContent = tag;
+        const subText = document.createElement("span");
+        subText.textContent = sub;
+        subLine.append(tagEl, subText);
+        text.append(nm, subLine);
+        row.append(thumb, text);
+        row.addEventListener("click", onClick);
+        list.appendChild(row);
+    };
+
+    playlistCards.forEach(card => {
+        const folderUrl = card.dataset.folderUrl;
+        addRow({
+            cover: card.dataset.cover,
+            name: card.querySelector(".playlist-title").textContent,
+            tag: "Playlist",
+            isSong: false,
+            sub: card.querySelector(".artist-name").textContent,
+            active: folderUrl === viewFolder,
+            onClick: async () => {
+                try { setView(folderUrl, await getFolderContent(folderUrl)); }
+                catch (err) { console.error("Failed to load songs:", err); return; }
+                if (window.innerWidth <= 768) setSidebar(true);
+            }
+        });
+    });
+
+    songMatches.slice(0, 50).forEach(sg => {
+        addRow({
+            cover: coverByFolder.get(sg.folderUrl),
+            name: sg.name,
+            tag: "Song",
+            isSong: true,
+            sub: `${sg.artist} · ${sg.album}`,
+            active: sg.url === songs[currentIndex],
+            onClick: async () => {
+                try {
+                    const content = await getFolderContent(sg.folderUrl);
+                    setView(sg.folderUrl, content);
+                    startQueue(sg.folderUrl, content);
+                    playAt(content.songs.indexOf(sg.url));
+                } catch (err) { console.error("Failed to play song:", err); }
+            }
+        });
+    });
+}
+
+function sortCards(cards, method) {
+    const favs = getFavorites();
+    return [...cards].sort((a, b) => {
+        const nameA = (a.dataset.name || "").toLowerCase();
+        const nameB = (b.dataset.name || "").toLowerCase();
+        const artistA = (a.dataset.artist || "").toLowerCase();
+        const artistB = (b.dataset.artist || "").toLowerCase();
+        const idxA = parseInt(a.dataset.origIndex || "0");
+        const idxB = parseInt(b.dataset.origIndex || "0");
+
+        switch (method) {
+            case "az": return nameA.localeCompare(nameB);
+            case "za": return nameB.localeCompare(nameA);
+            case "artist": return artistA.localeCompare(artistB);
+            case "favorites": {
+                const fa = favs[a.dataset.folderKey] ? 1 : 0;
+                const fb = favs[b.dataset.folderKey] ? 1 : 0;
+                return fb - fa || idxA - idxB;
+            }
+            default: return idxA - idxB;
+        }
+    });
+}
