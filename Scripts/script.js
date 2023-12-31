@@ -742,3 +742,74 @@ document.querySelectorAll(".sort-option").forEach(btn => {
         applyFiltersAndSort();
     });
 });
+
+/* ═══════════════════════════════════════════
+   LIBRARY FILTER (Playlists / Favorites)
+═══════════════════════════════════════════ */
+document.querySelectorAll(".libfilters").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".libfilters").forEach(b => b.classList.remove("active-lib"));
+        btn.classList.add("active-lib");
+        currentLibFilter = btn.dataset.lib;
+        renderLibrarySongs();
+    });
+});
+
+/* ═══════════════════════════════════════════
+   ACCENT COLOR + FULLSCREEN
+═══════════════════════════════════════════ */
+const ACCENTS = [
+    { name: "Red", color: "#e31b3a" },
+    { name: "Violet", color: "#8b7cff" },
+    { name: "Coral", color: "#ff6b6b" },
+    { name: "Sky", color: "#4cc9f0" },
+    { name: "Amber", color: "#ffb347" },
+    { name: "Pink", color: "#ff5fa2" },
+    { name: "Teal", color: "#2ec4b6" },
+    { name: "Green", color: "#1fdf64" }
+];
+
+function mixWithWhite(hex, amount) {
+    const n = parseInt(hex.slice(1), 16);
+    const ch = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v + (255 - v) * amount));
+    return `rgb(${ch.join(",")})`;
+}
+
+function applyAccent(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const root = document.documentElement.style;
+    root.setProperty("--accent", hex);
+    root.setProperty("--accent-rgb", `${n >> 16},${(n >> 8) & 255},${n & 255}`);
+    root.setProperty("--accent-hover", mixWithWhite(hex, 0.12));
+    root.setProperty("--accent-text", mixWithWhite(hex, 0.3));
+    document.querySelectorAll(".swatch").forEach(b => b.classList.toggle("active", b.dataset.color === hex));
+    try { localStorage.setItem("sp_accent", hex); } catch {}
+}
+
+const accentMenu = document.getElementById("accent-menu");
+ACCENTS.forEach(({ name, color }) => {
+    const b = document.createElement("button");
+    b.className = "swatch";
+    b.style.background = color;
+    b.dataset.color = color;
+    b.title = name;
+    b.setAttribute("aria-label", name + " accent");
+    b.addEventListener("click", e => { e.stopPropagation(); applyAccent(color); });
+    accentMenu.appendChild(b);
+});
+let savedAccent = null;
+try { savedAccent = localStorage.getItem("sp_accent"); } catch {}
+applyAccent(ACCENTS.some(a => a.color === savedAccent) ? savedAccent : ACCENTS[0].color);
+
+document.getElementById("accent-btn").addEventListener("click", e => {
+    e.stopPropagation();
+    accentMenu.classList.toggle("open");
+});
+document.addEventListener("click", e => {
+    if (!accentMenu.contains(e.target)) accentMenu.classList.remove("open");
+});
+
+document.getElementById("fullscreen-btn").addEventListener("click", () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.();
+});
