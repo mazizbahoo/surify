@@ -597,3 +597,54 @@ document.addEventListener("mouseup", () => { isDraggingVol = false; });
 document.getElementById("vol-btn").addEventListener("click", () => {
     if (audio.volume > 0) setVol(0); else setVol(lastVolume);
 });
+
+/* ═══════════════════════════════════════════
+   AUDIO EVENTS
+═══════════════════════════════════════════ */
+audio.addEventListener("timeupdate", () => {
+    if (isDraggingSeek) return;
+    const pct = audio.duration ? audio.currentTime / audio.duration : 0;
+    document.getElementById("runned-seek").style.width = (pct * 100) + "%";
+    document.getElementById("time-played").textContent = formatTime(audio.currentTime);
+    document.getElementById("total-time").textContent = formatTime(audio.duration);
+});
+audio.addEventListener("ended", () => {
+    if (repeatMode === "one") { audio.currentTime = 0; audio.play(); return; }
+    const atEnd = !shuffleOn && currentIndex === songs.length - 1;
+    if (atEnd && repeatMode === "off") { setPlayIcon(false); return; }
+    setTimeout(goNext, 800);
+});
+audio.addEventListener("pause", () => setPlayIcon(false));
+
+// Servers without HTTP Range support (e.g. python -m http.server) make the audio
+// unseekable. Detect that and switch to an in-memory copy so the slider works.
+audio.addEventListener("loadedmetadata", async () => {
+    const src = audio.src;
+    if (src.startsWith("blob:")) return;
+    const sk = audio.seekable;
+    if (sk.length && Math.abs(sk.end(sk.length - 1) - audio.duration) < 1) return;
+    try {
+        const blob = await (await fetch(src)).blob();
+        if (audio.src !== src) return; // song changed meanwhile
+        const t = audio.currentTime, wasPlaying = !audio.paused;
+        const url = URL.createObjectURL(blob);
+        audio.addEventListener("loadedmetadata", () => {
+            audio.currentTime = t;
+            if (wasPlaying) audio.play();
+        }, { once: true });
+        audio.src = url;
+        blobUrl = url;
+    } catch { /* keep streaming source */ }
+});
+audio.addEventListener("play", () => setPlayIcon(true));
+
+/* ═══════════════════════════════════════════
+   KEYBOARD
+═══════════════════════════════════════════ */
+document.addEventListener("keydown", e => {
+    const tag = document.activeElement.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if (e.key === " ") { e.preventDefault(); togglePlayPause(); }
+    if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); }
+});
