@@ -648,3 +648,97 @@ document.addEventListener("keydown", e => {
     if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
     if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); }
 });
+
+/* ═══════════════════════════════════════════
+   PLAYER BUTTONS
+═══════════════════════════════════════════ */
+document.getElementById("playbutton").addEventListener("click", togglePlayPause);
+document.getElementById("back-Button").addEventListener("click", goPrev);
+document.getElementById("next-Button").addEventListener("click", goNext);
+
+/* Shuffle + repeat */
+const shuffleBtn = document.getElementById("shuffle-btn");
+const repeatBtn = document.getElementById("repeat-btn");
+const REPEAT_ICONS = {
+    off: "M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z",
+    one: "M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"
+};
+
+shuffleBtn.addEventListener("click", () => {
+    shuffleOn = !shuffleOn;
+    shuffleBtn.classList.toggle("active", shuffleOn);
+    shuffleBtn.setAttribute("aria-pressed", String(shuffleOn));
+    shuffleBtn.title = shuffleOn ? "Shuffle: on" : "Shuffle";
+});
+repeatBtn.addEventListener("click", () => {
+    repeatMode = { off: "all", all: "one", one: "off" }[repeatMode];
+    repeatBtn.classList.toggle("active", repeatMode !== "off");
+    repeatBtn.setAttribute("aria-pressed", String(repeatMode !== "off"));
+    repeatBtn.title = "Repeat: " + repeatMode;
+    document.getElementById("repeat-path").setAttribute("d", REPEAT_ICONS[repeatMode === "one" ? "one" : "off"]);
+});
+
+/* ═══════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════ */
+const searchInput = document.getElementById("header-search");
+const searchClear = document.getElementById("search-clear");
+
+searchInput.addEventListener("input", () => {
+    searchQuery = searchInput.value;
+    searchClear.classList.toggle("visible", searchQuery.length > 0);
+    applyFiltersAndSort();
+});
+
+searchClear.addEventListener("click", () => {
+    searchInput.value = "";
+    searchQuery = "";
+    searchClear.classList.remove("visible");
+    searchInput.focus();
+    applyFiltersAndSort();
+});
+
+// Home: clear search + category filter and scroll back to the top
+document.getElementById("home-btn").addEventListener("click", () => {
+    searchInput.value = "";
+    searchQuery = "";
+    searchClear.classList.remove("visible");
+    selectCategory("all", document.querySelector('.cat-filter[data-category="all"]'));
+    document.getElementById("card-Container").scrollTo({ top: 0, behavior: "smooth" });
+    setSidebar(false);
+});
+
+// Sidebar search focus
+document.getElementById("open-search-sidebar")?.addEventListener("click", () => {
+    searchInput.focus();
+});
+
+/* ═══════════════════════════════════════════
+   SORT DROPDOWN
+═══════════════════════════════════════════ */
+const sortBtn = document.getElementById("sort-btn");
+const sortDropdown = document.getElementById("sort-dropdown");
+
+sortBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    const open = sortDropdown.classList.toggle("open");
+    sortBtn.classList.toggle("open", open);
+});
+
+document.addEventListener("click", () => {
+    sortDropdown.classList.remove("open");
+    sortBtn.classList.remove("open");
+});
+
+document.querySelectorAll(".sort-option").forEach(btn => {
+    btn.addEventListener("click", e => {
+        e.stopPropagation();
+        currentSort = btn.dataset.sort;
+        document.getElementById("sort-label-text").textContent = btn.textContent.replace("✓ ", "");
+        document.querySelectorAll(".sort-option").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        sortDropdown.classList.remove("open");
+        sortBtn.classList.remove("open");
+        applyFiltersAndSort();
+    });
+});
