@@ -363,3 +363,159 @@ function highlightCurrentLibrarySong() {
     const active = document.querySelector(".library-song-card.playing");
     if (active) active.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
+
+/* ═══════════════════════════════════════════
+   PLAY
+═══════════════════════════════════════════ */
+// The sidebar shows `viewContent`; playback runs from `songs` (the queue). They are the
+// same playlist once a song is started from the sidebar or a card's play button.
+function refreshCardStates() {
+    document.querySelectorAll(".card").forEach(c => {
+        c.classList.toggle("viewing-card", c.dataset.folderUrl === viewFolder);
+        c.classList.toggle("playing-card", c.dataset.folderUrl === currentFolder);
+    });
+    updateCardPlayIcons(!audio.paused);
+}
+
+function setView(folderUrl, content) {
+    viewFolder = folderUrl;
+    viewContent = content;
+    renderLibrarySongs();
+    refreshCardStates();
+}
+
+function startQueue(folderUrl, content) {
+    currentFolder = folderUrl;
+    songs = content.songs;
+    currentCover = content.cover;
+    currentIndex = 0;
+    playHistory.length = 0;
+}
+
+function playFromView(index) {
+    if (currentFolder !== viewFolder) startQueue(viewFolder, viewContent);
+    playAt(index);
+}
+
+function playAt(index) {
+    if (!songs.length) return;
+    setPlayerActive(true);
+    currentIndex = ((index % songs.length) + songs.length) % songs.length;
+    recordPlay();
+    currentSongKey = songKey(songs[currentIndex]);
+
+    const { songName, artist } = parseSongPath(songs[currentIndex]);
+    document.getElementById("ptt").textContent = songName;
+    document.getElementById("pta").textContent = artist;
+
+    const img = document.getElementById("player-img");
+    if (currentCover) img.src = currentCover; else img.removeAttribute("src");
+
+    if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
+    audio.src = songs[currentIndex];
+    audio.play();
+    setPlayIcon(true);
+    highlightCurrentLibrarySong();
+    refreshCardStates();
+    updatePlayerFavBtn();
+}
+
+// Player controls stay disabled and the song info hidden until a song is chosen
+function setPlayerActive(active) {
+    document.getElementById("player").classList.toggle("idle", !active);
+    ["back-Button", "playbutton", "next-Button", "player-fav-btn", "shuffle-btn", "repeat-btn"].forEach(id => {
+        document.getElementById(id).disabled = !active;
+    });
+}
+setPlayerActive(false);
+
+/* Play history behind the header back/forward buttons (spans playlists) */
+const trail = [];            // { folder, song } in the order songs were started
+let trailPos = -1;
+let trailNavigating = false;
+const navBack = document.getElementById("nav-back");
+const navForward = document.getElementById("nav-forward");
+
+function updateNavButtons() {
+    navBack.disabled = trailPos <= 0;
+    navForward.disabled = trailPos >= trail.length - 1;
+}
+
+function recordPlay() {
+    if (trailNavigating) return;
+    const entry = { folder: currentFolder, song: songs[currentIndex] };
+    const cur = trail[trailPos];
+    if (cur && cur.folder === entry.folder && cur.song === entry.song) return;
+    trail.length = trailPos + 1;           // drop any "forward" entries
+    trail.push(entry);
+    trailPos = trail.length - 1;
+    updateNavButtons();
+}
+
+async function goTrail(delta) {
+    const target = trailPos + delta;
+    if (target < 0 || target >= trail.length) return;
+    const entry = trail[target];
+    trailPos = target;
+    trailNavigating = true;
+    try {
+        if (entry.folder !== currentFolder) {
+            startQueue(entry.folder, await getFolderContent(entry.folder));
+        }
+        if (viewFolder !== entry.folder) setView(entry.folder, { songs, cover: currentCover });
+        const idx = songs.indexOf(entry.song);
+        if (idx >= 0) playAt(idx);
+    } catch (err) {
+        console.error("Failed to open previous song:", err);
+    } finally {
+        trailNavigating = false;
+        updateNavButtons();
+    }
+}
+navBack.addEventListener("click", () => goTrail(-1));
+navForward.addEventListener("click", () => goTrail(1));
+
+function goNext() {
+    if (!songs.length) return;
+    playHistory.push(currentIndex);
+    if (shuffleOn && songs.length > 1) {
+        let r;
+        do { r = Math.floor(Math.random() * songs.length); } while (r === currentIndex);
+        playAt(r);
+    } else {
+        playAt(currentIndex + 1);
+    }
+}
+
+function goPrev() {
+    if (!songs.length) return;
+    if (audio.currentTime > 3) { audio.currentTime = 0; return; }   // restart first, like most players
+    if (shuffleOn && playHistory.length) playAt(playHistory.pop());
+    else playAt(currentIndex - 1);
+}
+
+function togglePlayPause() {
+    if (!audio.src || audio.src === window.location.href) return;
+    if (audio.paused) { audio.play(); setPlayIcon(true); }
+    else { audio.pause(); setPlayIcon(false); }
+}
+
+const PLAY_PATH = `<path d="M8 5v14l11-7z"/>`;
+const PAUSE_PATH = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+
+function updateCardPlayIcons(playing) {
+    document.querySelectorAll(".card .playlist-img-play svg").forEach(svg => {
+        svg.innerHTML = svg.closest(".card").classList.contains("playing-card") && playing ? PAUSE_PATH : PLAY_PATH;
+    });
+}
+
+function setPlayIcon(playing) {
+    // The playing album's card shows pause/play too and keeps its button visible
+    updateCardPlayIcons(playing);
+    const btn = document.getElementById("play-icon-svg");
+    if (playing) {
+        btn.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+    } else {
+        btn.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+    }
+}
