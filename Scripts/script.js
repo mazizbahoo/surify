@@ -813,3 +813,151 @@ document.getElementById("fullscreen-btn").addEventListener("click", () => {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen?.();
 });
+
+/* ═══════════════════════════════════════════
+   MOBILE SIDEBAR
+═══════════════════════════════════════════ */
+const sidebarToggle = document.getElementById("sidebar-toggle");
+const leftSection = document.getElementById("left-section");
+const overlay = document.getElementById("mobile-overlay");
+
+function setSidebar(open) {
+    leftSection.classList.toggle("open", open);
+    overlay.classList.toggle("active", open);
+    sidebarToggle.classList.toggle("hidden", open);
+}
+sidebarToggle.addEventListener("click", () => setSidebar(true));
+overlay.addEventListener("click", () => setSidebar(false));
+document.getElementById("sidebar-close").addEventListener("click", () => setSidebar(false));
+document.addEventListener("keydown", e => { if (e.key === "Escape") setSidebar(false); });
+
+// Swipe left on the open drawer to close it
+let swipeX = null;
+leftSection.addEventListener("touchstart", e => { swipeX = e.touches[0].clientX; }, { passive: true });
+leftSection.addEventListener("touchend", e => {
+    if (swipeX !== null && swipeX - e.changedTouches[0].clientX > 60) setSidebar(false);
+    swipeX = null;
+});
+
+/* ═══════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════ */
+async function main() {
+    document.getElementById("card-Container").innerHTML =
+        `<div style="padding:24px;color:var(--lightgrey);font-size:14px;grid-column:1/-1;">Loading playlists…</div>`;
+    let folderUrls;
+    try {
+        audiosBase = await findAudiosBase();
+        folderUrls = await getFolders();
+    } catch (err) {
+        console.error("Failed to load folders:", err);
+        document.getElementById("card-Container").innerHTML = `
+            <div style="padding:24px;color:var(--lightgrey);font-size:14px;grid-column:1/-1;">
+                ⚠️ Could not load playlists. Serve this project with a local web server (e.g. Live Server or <code>python3 -m http.server</code>) that has an <code>Audios</code> folder beside <code>index.html</code> or in its parent folder.
+            </div>`;
+        return;
+    }
+
+    const container = document.getElementById("card-Container");
+    container.innerHTML = "";
+    renderLibrarySongs();
+
+    for (let i = 0; i < folderUrls.length; i++) {
+        const folderUrl = folderUrls[i];
+        const rawSegment = relFromBase(folderUrl);
+        const { name, artist, category } = parseFolderName(rawSegment);
+        const fKey = rawSegment.replace(/\/$/, "");
+
+        allFolders.push({ url: folderUrl, name, artist, category, key: fKey });
+        addCategoryFilter(category);
+
+        const fav = isFavorited(fKey);
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.category = category.toLowerCase();
+        card.dataset.name = name.toLowerCase();
+        card.dataset.artist = artist.toLowerCase();
+        card.style.setProperty("--i", Math.min(i, 12));
+        card.dataset.origIndex = i;
+        card.dataset.folderIndex = i;
+        card.dataset.folderKey = fKey;
+        card.dataset.folderUrl = folderUrl;
+
+        card.innerHTML = `
+            <div class="playlist-img">
+                <button class="card-fav-btn ${fav ? "favorited" : ""}" data-folder-key="${fKey}" title="${fav ? "Remove from favorites" : "Add to favorites"}">
+                    ${fav
+                        ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:var(--accent)"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`
+                        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
+                    }
+                </button>
+                <div class="playlist-play">
+                    <div class="playlist-img-play">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
+            </div>
+            <h3 class="playlist-title">${name}</h3>
+            <div class="artist-names"><span class="artist-name">${artist}</span></div>
+            <span class="card-category-badge">${category}</span>`;
+
+        container.appendChild(card);
+
+        // Album cover: first image found inside the folder
+        getFolderContent(folderUrl).then(({ cover, songs: folderSongs }) => {
+            folderSongs.forEach(url => songIndex.push({
+                url, folderUrl, album: name, artist, category,
+                name: parseSongPath(url).songName
+            }));
+            if (cover) {
+                card.dataset.cover = cover;
+                coverByFolder.set(folderUrl, cover);
+                card.querySelector(".playlist-img").style.backgroundImage = `url("${cover}")`;
+            }
+            if (searchQuery.trim()) applyFiltersAndSort();
+        }).catch(() => {});
+
+        // Favorite button on card
+        card.querySelector(".card-fav-btn").addEventListener("click", async e => {
+            e.stopPropagation();
+            toggleFavorite(fKey);
+            updateCardFavBtn(fKey);
+            // If we sort by favorites, re-apply
+            if (currentSort === "favorites") applyFiltersAndSort();
+        });
+
+        // Card click: preview its songs in the sidebar (no playback)
+        card.addEventListener("click", async () => {
+            if (viewFolder !== folderUrl) {
+                try {
+                    setView(folderUrl, await getFolderContent(folderUrl));
+                } catch (err) {
+                    console.error("Failed to load songs:", err);
+                    return;
+                }
+            }
+            if (window.innerWidth <= 768) setSidebar(true);
+        });
+
+        // Play button on the card: play this playlist (or pause/resume if it's the one playing)
+        card.querySelector(".playlist-img-play").addEventListener("click", async e => {
+            e.stopPropagation();
+            if (currentFolder === folderUrl && songs.length) { togglePlayPause(); return; }
+            let content;
+            try { content = await getFolderContent(folderUrl); }
+            catch (err) { console.error("Failed to load songs:", err); return; }
+            setView(folderUrl, content);
+            startQueue(folderUrl, content);
+            if (songs.length) playAt(0);
+        });
+    }
+
+    // Initial filter apply
+    applyFiltersAndSort();
+}
+
+main();
+
+// Lets the launcher's local server know the page is still open (it quits when it isn't)
+setInterval(() => fetch("__ping", { cache: "no-store" }).catch(() => {}), 5000);
