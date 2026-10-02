@@ -96,8 +96,18 @@ function songKey(songUrl) {
 /* ═══════════════════════════════════════════
    FETCH
 ═══════════════════════════════════════════ */
+// Static hosts (e.g. GitHub Pages) can't list folders, so Audios/playlists.json is used instead
+let manifest = null;        // { base, folders: { "<folder>": ["<file>", ...] } }
+
+function manifestLinks(dirUrl) {
+    const rel = decodeURIComponent(dirUrl.slice(manifest.base.length).replace(/\/$/, ""));
+    if (!rel) return Object.keys(manifest.folders).map(f => manifest.base + encodeURIComponent(f) + "/");
+    return (manifest.folders[rel] || []).map(f => dirUrl + encodeURIComponent(f));
+}
+
 // Lists the links of a directory index page, resolved against that directory's own URL
 async function listLinks(dirUrl) {
+    if (manifest && dirUrl.startsWith(manifest.base)) return manifestLinks(dirUrl);
     const res = await fetch(dirUrl);
     if (!res.ok) throw new Error(`${res.status} ${dirUrl}`);
     const doc = new DOMParser().parseFromString(await res.text(), "text/html");
@@ -112,6 +122,13 @@ async function findAudiosBase() {
         try {
             const links = await listLinks(url);
             if (links.some(l => l.startsWith(url) && l !== url)) return url;
+        } catch { /* try next */ }
+    }
+    for (const rel of ["Audios/", "../Audios/"]) {
+        const url = new URL(rel, window.location.href).href;
+        try {
+            const res = await fetch(url + "playlists.json");
+            if (res.ok) { manifest = { base: url, folders: await res.json() }; return url; }
         } catch { /* try next */ }
     }
     throw new Error("Audios folder not found");

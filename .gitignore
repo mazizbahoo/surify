@@ -3,3 +3,4 @@ desktop.ini
 Thumbs.db
 # Only a couple of sample songs per playlist are tracked; add your own mp3s locally
 Audios/**/*.mp3
+Audios/playlists.json

@@ -9,6 +9,10 @@
   Built with plain HTML, CSS and JavaScript. No frameworks, no accounts, nothing to install except Python.
 </p>
 
+<p align="center">
+  <a href="https://mazizbahoo.github.io/surify/"><b>▶ Try the live demo</b></a>
+</p>
+
 ---
 
 ## About
@@ -131,9 +135,22 @@ surify/
 ├── Launcher/
 │   ├── server.py         # Local server for macOS / Linux
 │   └── server.ps1        # Local server for Windows
+├── Tools/build_playlists.py  # Generates Audios/playlists.json for GitHub Pages
+├── index.html            # Redirects to App/ (for GitHub Pages)
 ├── Surify.app            # macOS launcher
 └── Surify.vbs            # Windows launcher
 ```
+
+## Hosting on GitHub Pages
+
+The repo deploys itself to GitHub Pages with the workflow in `.github/workflows/pages.yml`.
+
+GitHub Pages can't list folders, so on every push the workflow runs `Tools/build_playlists.py`, which writes `Audios/playlists.json` listing every playlist, song and cover. When folder listing isn't available, the app reads that file instead.
+
+To host your own copy:
+1. Fork or push the repo to GitHub.
+2. Go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+3. Push to `main`. Your site will be at `https://<username>.github.io/surify/`.
 
 ## Troubleshooting
 
