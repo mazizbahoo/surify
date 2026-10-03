@@ -151,6 +151,7 @@ button:active:not(:disabled) { transform: scale(0.94); }
     display: flex;
     gap: 8px;
     padding: 4px 12px 4px 0;
+    margin-bottom: 12px;
     overflow-x: auto;
     scrollbar-width: none;
 }
@@ -299,33 +300,6 @@ button:active:not(:disabled) { transform: scale(0.94); }
     transition: var(--t-fast);
 }
 .go.beus:hover { background: #2a2a2a; }
-
-/* Accent picker */
-.accent-wrap { position: relative; }
-.accent-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px rgba(255,255,255,0.85); }
-.accent-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    z-index: 100;
-    display: grid;
-    grid-template-columns: repeat(4, 28px);
-    gap: 10px;
-    padding: 12px;
-    background: #282828;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-6px) scale(0.98);
-    transform-origin: top right;
-    transition: opacity var(--t), transform var(--t), visibility var(--t);
-}
-.accent-menu.open { opacity: 1; visibility: visible; transform: none; }
-.swatch { width: 28px; height: 28px; border-radius: 50%; transition: transform var(--t-fast); }
-.swatch:hover { transform: scale(1.12); }
-.swatch.active { box-shadow: 0 0 0 2px #282828, 0 0 0 4px var(--white); }
 
 /* ─── Search Bar ──────────────────────── */
 .header-search-wrap {
@@ -824,13 +798,11 @@ button:active:not(:disabled) { transform: scale(0.94); }
     border-radius: 2px;
     cursor: pointer;
 }
-.back-seek:hover { height: 5px; }
-.back-seek:hover .runned-seek { background: var(--accent); }
-.back-seek:hover .dot-seek { display: block; }
+.back-seek:hover { height: 6px; }
 
 .runned-seek {
     position: absolute;
-    background: var(--white);
+    background: var(--accent);
     height: 100%;
     border-radius: 2px;
     width: 0;
@@ -848,7 +820,6 @@ button:active:not(:disabled) { transform: scale(0.94); }
     width: 12px;
     height: 12px;
     background: var(--white);
-    display: none;
     transition: none;
 }
 
@@ -1005,7 +976,6 @@ button:active:not(:disabled) { transform: scale(0.94); }
     .player-song-settings { display: none; }
     .player-img-wrap, .player-image { width: 44px; height: 44px; }
     .back-seek { height: 6px; }
-    .dot-seek { display: block; }
 
     /* Close button inside the drawer; logo sits beside it */
     .sidebar-close {

@@ -340,7 +340,7 @@ function renderLibrarySongs(songList = viewContent.songs) {
     if (filtered.length === 0) {
         container.innerHTML = `<div style="padding:16px 8px;color:var(--lightgrey);font-size:13px;">
             ${!viewFolder ? "Select a playlist to see its songs."
-                : currentLibFilter === "favorites" ? "No favorites yet. ❤ a song to add it." : "No songs in this playlist."}
+                : currentLibFilter === "favorites" ? `No favorites yet. <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px;margin:0 2px;color:var(--accent);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> a song to add it.` : "No songs in this playlist."}
         </div>`;
         return;
     }
@@ -727,6 +727,7 @@ document.getElementById("home-btn").addEventListener("click", () => {
 
 // Sidebar search focus
 document.getElementById("open-search-sidebar")?.addEventListener("click", () => {
+    setSidebar(false);
     searchInput.focus();
 });
 
@@ -773,59 +774,8 @@ document.querySelectorAll(".libfilters").forEach(btn => {
 });
 
 /* ═══════════════════════════════════════════
-   ACCENT COLOR + FULLSCREEN
+   FULLSCREEN
 ═══════════════════════════════════════════ */
-const ACCENTS = [
-    { name: "Red", color: "#e31b3a" },
-    { name: "Violet", color: "#8b7cff" },
-    { name: "Coral", color: "#ff6b6b" },
-    { name: "Sky", color: "#4cc9f0" },
-    { name: "Amber", color: "#ffb347" },
-    { name: "Pink", color: "#ff5fa2" },
-    { name: "Teal", color: "#2ec4b6" },
-    { name: "Green", color: "#1fdf64" }
-];
-
-function mixWithWhite(hex, amount) {
-    const n = parseInt(hex.slice(1), 16);
-    const ch = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v + (255 - v) * amount));
-    return `rgb(${ch.join(",")})`;
-}
-
-function applyAccent(hex) {
-    const n = parseInt(hex.slice(1), 16);
-    const root = document.documentElement.style;
-    root.setProperty("--accent", hex);
-    root.setProperty("--accent-rgb", `${n >> 16},${(n >> 8) & 255},${n & 255}`);
-    root.setProperty("--accent-hover", mixWithWhite(hex, 0.12));
-    root.setProperty("--accent-text", mixWithWhite(hex, 0.3));
-    document.querySelectorAll(".swatch").forEach(b => b.classList.toggle("active", b.dataset.color === hex));
-    try { localStorage.setItem("sp_accent", hex); } catch {}
-}
-
-const accentMenu = document.getElementById("accent-menu");
-ACCENTS.forEach(({ name, color }) => {
-    const b = document.createElement("button");
-    b.className = "swatch";
-    b.style.background = color;
-    b.dataset.color = color;
-    b.title = name;
-    b.setAttribute("aria-label", name + " accent");
-    b.addEventListener("click", e => { e.stopPropagation(); applyAccent(color); });
-    accentMenu.appendChild(b);
-});
-let savedAccent = null;
-try { savedAccent = localStorage.getItem("sp_accent"); } catch {}
-applyAccent(ACCENTS.some(a => a.color === savedAccent) ? savedAccent : ACCENTS[0].color);
-
-document.getElementById("accent-btn").addEventListener("click", e => {
-    e.stopPropagation();
-    accentMenu.classList.toggle("open");
-});
-document.addEventListener("click", e => {
-    if (!accentMenu.contains(e.target)) accentMenu.classList.remove("open");
-});
-
 document.getElementById("fullscreen-btn").addEventListener("click", () => {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen?.();
